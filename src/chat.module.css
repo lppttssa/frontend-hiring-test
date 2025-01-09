@@ -1,4 +1,5 @@
 .root {
+  position: relative;
   border: 1px solid #e4e5ea;
   border-radius: 16px;
   margin: auto;
@@ -48,4 +49,20 @@
 
 .textInput {
   flex: auto;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+
+  &:disabled {
+    pointer-events: none;
+  }
+}
+
+.buttonLoader {
+  width: 10px;
+  height: 10px;
 }

@@ -1,20 +1,16 @@
 import React from "react";
-import { ItemContent, Virtuoso } from "react-virtuoso";
+
 import cn from "clsx";
-import {
-  MessageSender,
-  MessageStatus,
-  type Message,
-} from "../__generated__/resolvers-types";
+import { ItemContent, Virtuoso } from "react-virtuoso";
+
+import { useChat } from './chat.hooks.ts';
+
+import { Loader } from './components/loader/loader.tsx';
+
 import css from "./chat.module.css";
 
-const temp_data: Message[] = Array.from(Array(30), (_, index) => ({
-  id: String(index),
-  text: `Message number ${index}`,
-  status: MessageStatus.Read,
-  updatedAt: new Date().toISOString(),
-  sender: index % 2 ? MessageSender.Admin : MessageSender.Customer,
-}));
+import { type Message, MessageSender, } from "../__generated__/resolvers-types";
+import { LoaderType } from './components/loader/loader.types.ts';
 
 const Item: React.FC<Message> = ({ text, sender }) => {
   return (
@@ -36,19 +32,38 @@ const getItem: ItemContent<Message, unknown> = (_, data) => {
 };
 
 export const Chat: React.FC = () => {
+  const {
+    messages,
+    handleMessageSend,
+    handleNewMessageChange,
+    newMessageText,
+    isMessagesLoading,
+    isMessageSending,
+  } = useChat();
+
   return (
     <div className={css.root}>
       <div className={css.container}>
-        <Virtuoso className={css.list} data={temp_data} itemContent={getItem} />
+        <Virtuoso
+          className={css.list}
+          data={messages.map(message => message.node) as Message[]}
+          itemContent={getItem}
+        />
       </div>
       <div className={css.footer}>
         <input
           type="text"
           className={css.textInput}
           placeholder="Message text"
+          value={newMessageText}
+          onChange={handleNewMessageChange}
         />
-        <button>Send</button>
+        <button onClick={handleMessageSend} className={css.button} disabled={isMessageSending}>
+          {isMessageSending ? <Loader className={css.buttonLoader} /> : 'Send'}
+        </button>
       </div>
+
+      {isMessagesLoading && <Loader type={LoaderType.Cover} />}
     </div>
   );
 };
