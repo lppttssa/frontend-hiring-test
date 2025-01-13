@@ -6,13 +6,14 @@ import { ItemContent, Virtuoso } from "react-virtuoso";
 import { useChat } from './chat.hooks.ts';
 
 import { Loader } from './components/loader/loader.tsx';
+import { Status } from './components/status/status.tsx';
 
 import css from "./chat.module.css";
 
 import { type Message, MessageSender, } from "../__generated__/resolvers-types";
 import { LoaderType } from './components/loader/loader.types.ts';
 
-const Item: React.FC<Message> = ({ text, sender }) => {
+const Item: React.FC<Message> = ({ text, sender, status }) => {
   return (
     <div className={css.item}>
       <div
@@ -22,6 +23,10 @@ const Item: React.FC<Message> = ({ text, sender }) => {
         )}
       >
         {text}
+
+        <div className={css.status}>
+          <Status variant={status}/>
+        </div>
       </div>
     </div>
   );
