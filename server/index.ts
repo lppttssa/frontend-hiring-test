@@ -17,6 +17,7 @@ import {
   type Resolvers,
 } from "../__generated__/resolvers-types";
 import { delay } from "./delay";
+import {v4 as uuidv4} from 'uuid';
 
 const PORT = 4000;
 const pubsub = new PubSub();
@@ -25,7 +26,7 @@ const MESSAGE_ADDED = "MESSAGE_ADDED";
 const MESSAGE_UPDATED = "MESSAGE_UPDATED";
 
 const messages: Message[] = Array.from(Array(30), (_, index) => ({
-  id: String(index),
+  id: uuidv4(),
   text: `Message number ${index}`,
   status: MessageStatus.Read,
   updatedAt: new Date().toISOString(),
@@ -121,9 +122,9 @@ const resolvers: Resolvers = {
       const paginatedMessages = slicedMessages.slice(0, first || 10);
 
       // Create edges
-      const edges = paginatedMessages.map((message) => ({
+      const edges = paginatedMessages.map((message, index) => ({
         node: message,
-        cursor: message.id,
+        cursor: index.toString(),
       }));
 
       // Calculate pageInfo
@@ -147,7 +148,7 @@ const resolvers: Resolvers = {
   Mutation: {
     sendMessage: async (_, { text }) => {
       const messageAdded = {
-        id: `${messages.length + 1}`,
+        id: uuidv4(),
         text,
         status: MessageStatus.Sending,
         updatedAt: new Date().toISOString(),
@@ -249,7 +250,7 @@ const asyncReplyMessage = () => {
       const index = messages.length + 1;
 
       const messageAdded: Message = {
-        id: `${index}`,
+        id: uuidv4(),
         text: `Message number ${index}`,
         status: MessageStatus.Sent,
         updatedAt: new Date().toISOString(),
