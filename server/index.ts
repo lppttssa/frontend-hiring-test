@@ -122,9 +122,9 @@ const resolvers: Resolvers = {
       const paginatedMessages = slicedMessages.slice(0, first || 10);
 
       // Create edges
-      const edges = paginatedMessages.map((message, index) => ({
+      const edges = paginatedMessages.map((message) => ({
         node: message,
-        cursor: index.toString(),
+        cursor: message.id,
       }));
 
       // Calculate pageInfo
