@@ -70,6 +70,11 @@ export enum MessageSender {
   Customer = "Customer",
 }
 
+export enum LoadDirection {
+  Before = "before",
+  After = "after"
+}
+
 export type Mutation = {
   __typename?: "Mutation";
   sendMessage: Message;

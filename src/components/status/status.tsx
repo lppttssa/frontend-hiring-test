@@ -14,12 +14,8 @@ export const Status: FC<StatusProps> = ({ variant = MessageStatus.Sent }) => {
   const printStatus = () => {
     let status: string = '✓';
 
-    if (variant === MessageStatus.Read) {
+    if (variant === MessageStatus.Read || variant === MessageStatus.Sent) {
       status = status.repeat(2);
-    }
-
-    if (variant === MessageStatus.Sending) {
-      status = '🕐';
     }
 
     return <span className={cn(css.status, {

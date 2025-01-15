@@ -3,6 +3,8 @@ import { ChangeEvent, useState } from 'react';
 import { useMessage } from './hooks/useMessage.ts';
 
 export const useChat = () => {
+  const MESSAGES_PER_PAGE = 10;
+
   const [newMessageText, setNewMessageText] = useState<string>('');
 
   const {
@@ -10,11 +12,17 @@ export const useChat = () => {
     handleMessageSend,
     isMessagesLoading,
     isMessageSending,
-  } = useMessage(newMessageText, setNewMessageText);
+    pageInfo,
+    handleLoadMore,
+  } = useMessage(newMessageText, handleTextClear, MESSAGES_PER_PAGE);
 
   const handleNewMessageChange = (event: ChangeEvent<HTMLInputElement>) => {
     setNewMessageText(event.target.value);
   };
+
+  function handleTextClear() {
+    setNewMessageText('');
+  }
 
   return {
     handleNewMessageChange,
@@ -23,5 +31,7 @@ export const useChat = () => {
     newMessageText,
     isMessagesLoading,
     isMessageSending,
+    pageInfo,
+    handleLoadMore,
   };
 };

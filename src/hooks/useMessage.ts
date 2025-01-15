@@ -1,8 +1,14 @@
-import { Dispatch, SetStateAction, useEffect } from 'react';
+import { useEffect } from 'react';
 
 import { useMutation, useQuery } from '@apollo/client';
 
-import { Message, MessageEdge, MessageSender, Mutation, Query } from '../../__generated__/resolvers-types.ts';
+import {
+  LoadDirection,
+  type Message,
+  type MessageEdge,
+  type Mutation,
+  type Query
+} from '../../__generated__/resolvers-types.ts';
 
 import {
   MESSAGE_ADDED_SUBSCRIPTION,
@@ -13,11 +19,12 @@ import {
 
 export const useMessage = (
   textToSend: string,
-  setTextToSend?: Dispatch<SetStateAction<string>>
+  handleTextClear?: () => void,
+  messagesToLoad = 10
 ) => {
-  const { data, subscribeToMore, loading: isMessagesLoading } = useQuery<Query>(MESSAGES_QUERY, {
+  const { data, subscribeToMore, loading: isMessagesLoading, fetchMore } = useQuery<Query>(MESSAGES_QUERY, {
     variables: {
-      first: 100,
+      first: messagesToLoad,
     },
     fetchPolicy: 'cache-first',
   });
@@ -29,28 +36,49 @@ export const useMessage = (
   });
 
   const messages: MessageEdge[] = data?.messages.edges || [];
+  const pageInfo = data?.messages.pageInfo;
 
   const handleMessageSend = async () => {
     await sendMessage({ variables: { text: textToSend } });
 
-    if (setTextToSend) {
-      setTextToSend('');
+    if (handleTextClear) {
+      handleTextClear();
     }
   };
 
-  const createNewMessageId = (newMessage: Message): string => {
-    if (newMessage.sender === MessageSender.Admin) {
-      return newMessage.id;
+  const handleLoadMore = (direction: LoadDirection) => {
+    const isBefore = direction === LoadDirection.Before;
+    const hasMore = isBefore ? pageInfo?.hasPreviousPage : pageInfo?.hasNextPage;
+
+    if (!hasMore) {
+      return;
     }
 
-    return newMessage.updatedAt;
+    const cursor = isBefore ? pageInfo?.startCursor : pageInfo?.endCursor;
+
+    fetchMore({
+      variables: {
+        first: messagesToLoad,
+        [isBefore ? LoadDirection.Before : LoadDirection.After]: cursor,
+      },
+      updateQuery(prev, { fetchMoreResult }) {
+        return {
+          messages: {
+            edges: isBefore
+              ? [...fetchMoreResult.messages.edges, ...prev.messages.edges]
+              : [...prev.messages.edges, ...fetchMoreResult.messages.edges],
+            pageInfo: { ...fetchMoreResult.messages.pageInfo },
+          }
+        };
+      }
+    });
   };
 
   const subscribeToMessageAdd = () => {
     return subscribeToMore({
       document: MESSAGE_ADDED_SUBSCRIPTION,
       updateQuery: (prev: Query, { subscriptionData }) => {
-        if (!subscriptionData.data) {
+        if (!subscriptionData.data || prev.messages.pageInfo.hasNextPage) {
           return prev;
         }
 
@@ -63,22 +91,16 @@ export const useMessage = (
           return prev;
         }
 
-        const newEndCursor: number = prev.messages.edges.length + 1;
-
         return {
           messages: {
             ...prev.messages,
             edges: [
               ...prev.messages.edges,
-              {
-                __typename: "MessageEdge",
-                cursor: newEndCursor.toString(),
-                node: { ...newMessage, id: createNewMessageId(newMessage) }
-              }
+              { __typename: "MessageEdge", cursor: newMessage.id, node: { ...newMessage } }
             ],
             pageInfo: {
               ...prev.messages.pageInfo,
-              endCursor: newEndCursor,
+              endCursor: newMessage.id,
             }
           }
         };
@@ -127,12 +149,14 @@ export const useMessage = (
       unsubscribeToMessageAdd();
       unsubscribeToMessageUpdate();
     };
-  }, [subscribeToMore]);
+  }, []);
 
   return {
     messages,
     handleMessageSend,
     isMessagesLoading,
     isMessageSending,
+    pageInfo: data?.messages.pageInfo,
+    handleLoadMore,
   };
 };

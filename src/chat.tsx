@@ -10,7 +10,7 @@ import { Status } from './components/status/status.tsx';
 
 import css from "./chat.module.css";
 
-import { type Message, MessageSender, } from "../__generated__/resolvers-types";
+import { LoadDirection, type Message, MessageSender, } from "../__generated__/resolvers-types";
 import { LoaderType } from './components/loader/loader.types.ts';
 
 const Item: React.FC<Message> = ({ text, sender, status }) => {
@@ -25,7 +25,7 @@ const Item: React.FC<Message> = ({ text, sender, status }) => {
         {text}
 
         <div className={css.status}>
-          <Status variant={status}/>
+          <Status variant={status} />
         </div>
       </div>
     </div>
@@ -44,6 +44,7 @@ export const Chat: React.FC = () => {
     newMessageText,
     isMessagesLoading,
     isMessageSending,
+    handleLoadMore,
   } = useChat();
 
   return (
@@ -53,6 +54,8 @@ export const Chat: React.FC = () => {
           className={css.list}
           data={messages.map(message => message.node) as Message[]}
           itemContent={getItem}
+          startReached={() => handleLoadMore(LoadDirection.Before)}
+          endReached={() => handleLoadMore(LoadDirection.After)}
         />
       </div>
       <div className={css.footer}>
