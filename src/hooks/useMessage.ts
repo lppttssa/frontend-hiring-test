@@ -18,8 +18,6 @@ import {
 } from '../chat.queries.ts';
 
 export const useMessage = (
-  textToSend: string,
-  handleTextClear?: () => void,
   messagesToLoad = 10
 ) => {
   const { data, subscribeToMore, loading: isMessagesLoading, fetchMore } = useQuery<Query>(MESSAGES_QUERY, {
@@ -38,12 +36,8 @@ export const useMessage = (
   const messages: MessageEdge[] = data?.messages.edges || [];
   const pageInfo = data?.messages.pageInfo;
 
-  const handleMessageSend = async () => {
+  const handleMessageSend = async (textToSend: string) => {
     await sendMessage({ variables: { text: textToSend } });
-
-    if (handleTextClear) {
-      handleTextClear();
-    }
   };
 
   const handleLoadMore = (direction: LoadDirection) => {

@@ -9,20 +9,22 @@ export const useChat = () => {
 
   const {
     messages,
-    handleMessageSend,
+    handleMessageSend: sendMessage,
     isMessagesLoading,
     isMessageSending,
     pageInfo,
     handleLoadMore,
-  } = useMessage(newMessageText, handleTextClear, MESSAGES_PER_PAGE);
+  } = useMessage(MESSAGES_PER_PAGE);
+
+  const handleMessageSend = async () => {
+    await sendMessage(newMessageText);
+
+    setNewMessageText('');
+  };
 
   const handleNewMessageChange = (event: ChangeEvent<HTMLInputElement>) => {
     setNewMessageText(event.target.value);
   };
-
-  function handleTextClear() {
-    setNewMessageText('');
-  }
 
   return {
     handleNewMessageChange,
